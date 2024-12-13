@@ -15,11 +15,15 @@ class Parser
   end
 
   def parse
-    begin
-      return expression
-    rescue ex : ParseError
-      return
-    end
+    # Right now we don't want to return nil if there's an error because Crystal doesn't want
+    # to handle Expr|Nil for the AstPrinter.
+    # 
+    # begin
+    #   return expression
+    # rescue ex : ParseError
+    #   return
+    # end
+    expression
   end
 
   def expression
@@ -32,7 +36,7 @@ class Parser
     while match(TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL)
       operator = previous
       right = comparison
-      expr = Expr::Binary.new(exp, operator, right)
+      expr = Expr::Binary.new(expr, operator, right)
     end
     expr
   end
@@ -43,8 +47,9 @@ class Parser
     while match(TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL)
       operator = previous
       right = term
-      expr = Expr::Binary.new(exp, operator, right)
+      expr = Expr::Binary.new(expr, operator, right)
     end
+    expr
   end
 
   def term
@@ -55,6 +60,7 @@ class Parser
       right = factor
       expr = Expr::Binary.new(expr, operator, right)
     end
+    expr
   end
 
   def factor
@@ -65,6 +71,7 @@ class Parser
       right = unary
       expr = Expr::Binary.new(expr, operator, right)
     end
+    expr
   end
 
   def unary

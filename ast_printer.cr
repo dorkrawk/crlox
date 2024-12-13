@@ -3,7 +3,7 @@ require "./token_type"
 require "./expr"
 
 class AstPrinter
-  def print(expr)
+  def print(expr : Expr) : String
     expr.accept(self)
   end
 
@@ -29,18 +29,6 @@ class AstPrinter
   end
 
   def main()
-    expression = Expr::Binary.new(
-      Expr::Unary.new(
-        Token.new(TokenType::MINUS, "-", nil, 1),
-        Expr::Literal.new(123)
-      ),
-      Token.new(TokenType::STAR, "*", nil, 1),
-      Expr::Grouping.new(
-        Expr::Literal.new(45.67)
-      )
-    )
-
-    puts AstPrinter.new.print(expression)
   end
 end
 

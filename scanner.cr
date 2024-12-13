@@ -121,7 +121,7 @@ class Scanner
     advance
 
     # Trim the surrounding quotes for the token value.
-    value = @source[@start + 1..@current - 1]
+    value = @source[@start + 1...@current - 1]
     add_token(TokenType::STRING, value)
   end
 
@@ -139,7 +139,7 @@ class Scanner
       end
     end
 
-    add_token(TokenType::NUMBER, @source[@start..@current].to_f)
+    add_token(TokenType::NUMBER, @source[@start...@current].to_f)
   end 
 
   def identifier

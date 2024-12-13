@@ -1,9 +1,12 @@
 require "./scanner"
 require "./parser"
 require "./ast_printer"
+require "./interpreter"
 
 class Lox
+  @@interpreter = Interpreter.new
   @@had_error = false
+  @@had_runtime_error = false
 
   def main(args)
     if args.size > 1
@@ -20,6 +23,7 @@ class Lox
     source = File.read(file)
     run(source)
     Process.exit(65) if @@had_error
+    Process.exit(70) if @@had_runtime_error
   end
 
   def run_prompt
@@ -36,16 +40,20 @@ class Lox
     scanner = Scanner.new(source)
     tokens = scanner.scan_tokens
 
+    tokens.each do |token|
+      puts token.to_s
+    end
+
     parser = Parser.new(tokens)
     expression = parser.parse
 
     return if @@had_error
 
+    # puts expression.inspect
+
     puts AstPrinter.new.print(expression) # need to test!!!!!!
 
-    # tokens.each do |token|
-    #   puts token.to_s
-    # end
+    @@interpreter.interpret(expression)
   end
 
   def self.error(line, message)
@@ -58,6 +66,11 @@ class Lox
     else 
       report(token.line, " at '#{token.lexeme}'", message)
     end
+  end
+
+  def self.runtime_error(token : Token, message : String)
+    report(token.line, " at '#{token.lexeme}'", message)
+    @@had_runtime_error = true
   end
 
   def self.report(line, where, message)
