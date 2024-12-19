@@ -13,6 +13,11 @@ class GenerateAst
       "Literal  : Bool | Nil | Float64 | String - value",
       "Unary    : Token - operator, Expr - right",
     ])
+
+    define_ast(output_dir, "Stmt", [
+      "Expression : Expr - expression",
+      "Print      : Expr - expression",
+    ])
   end
 
   def define_ast(output_dir, base_name, types)
