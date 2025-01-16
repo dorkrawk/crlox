@@ -40,20 +40,16 @@ class Lox
     scanner = Scanner.new(source)
     tokens = scanner.scan_tokens
 
-    tokens.each do |token|
-      puts token.to_s
-    end
+    # tokens.each do |token|
+    #   puts token.to_s
+    # end
 
     parser = Parser.new(tokens)
-    expression = parser.parse
+    statements = parser.parse
 
     return if @@had_error
 
-    # puts expression.inspect
-
-    puts AstPrinter.new.print(expression) # need to test!!!!!!
-
-    @@interpreter.interpret(expression)
+    @@interpreter.interpret(statements)
   end
 
   def self.error(line, message)
@@ -63,7 +59,7 @@ class Lox
   def self.error(token : Token, message : String)
     if token.type == TokenType::EOF
       report(token.line, " at end", message)
-    else 
+    else
       report(token.line, " at '#{token.lexeme}'", message)
     end
   end

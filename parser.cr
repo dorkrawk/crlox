@@ -1,10 +1,10 @@
 require "./token_type"
 require "./token"
 require "./expr"
+require "./stmt"
 
 class Parser
-
-  class ParseError < Exception; end;
+  class ParseError < Exception; end
 
   getter :tokens
   getter :current
@@ -17,17 +17,42 @@ class Parser
   def parse
     # Right now we don't want to return nil if there's an error because Crystal doesn't want
     # to handle Expr|Nil for the AstPrinter.
-    # 
+    #
     # begin
     #   return expression
     # rescue ex : ParseError
     #   return
     # end
-    expression
+    statements = [] of Stmt
+    while !is_at_end?
+      statements << statement
+    end
+
+    statements
   end
 
   def expression
     equality
+  end
+
+  def statement
+    return print_statement if match(TokenType::PRINT)
+
+    expression_statement
+  end
+
+  def print_statement
+    value = expression
+    consume(TokenType::SEMICOLON, "Expect ';' after value.")
+
+    Stmt::Print.new(value)
+  end
+
+  def expression_statement
+    expr = expression
+    consume(TokenType::SEMICOLON, "Expect ';' after value.")
+
+    Stmt::Expression.new(expr)
   end
 
   def equality
@@ -121,7 +146,7 @@ class Parser
 
       case peek.type
       when TokenType::CLASS, TokenType::FUN, TokenType::VAR, TokenType::FOR, TokenType::IF, TokenType::WHILE,
-        TokenType::PRINT, TokenType::RETURN
+           TokenType::PRINT, TokenType::RETURN
         return
       end
     end
@@ -141,16 +166,16 @@ class Parser
   end
 
   def check(type : TokenType)
-    return false if is_at_end
+    return false if is_at_end?
     peek.type == type
   end
 
   def advance
-    @current += 1 unless is_at_end
+    @current += 1 unless is_at_end?
     previous
   end
 
-  def is_at_end
+  def is_at_end?
     peek.type == TokenType::EOF
   end
 

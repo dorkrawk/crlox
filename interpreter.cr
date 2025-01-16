@@ -18,7 +18,7 @@ class Interpreter
       !is_truthy?(right)
     when TokenType::MINUS
       check_number_operand(expr.operator, right)
-      -right.as(Float64) 
+      -right.as(Float64)
     else
       raise "Unknown unary operator: #{expr.operator.type}"
     end
@@ -72,6 +72,17 @@ class Interpreter
     end
   end
 
+  def visit_expression_stmt(stmt : Stmt::Expression)
+    evaluate(stmt.expression)
+    nil
+  end
+
+  def visit_print_stmt(stmt : Stmt::Print)
+    value = evaluate(stmt.expression)
+    puts value
+    nil
+  end
+
   def is_truthy?(value)
     return false if value.nil?
     return !!value if value.is_a?(Bool)
@@ -86,22 +97,29 @@ class Interpreter
     if operand.is_a?(Float64)
       return true
     else
-      raise LoxRuntimeError.new(operator, "Operand must be a number. Got #{operand.class}.") 
+      raise LoxRuntimeError.new(operator, "Operand must be a number. Got #{operand.class}.")
     end
   end
 
+  # do we need this anymore?
   def evaluate(expr : Expr)
     expr.accept(self)
   end
 
-  def interpret(expr : Expr)
+  def interpret(statements : Array(Stmt))
     begin
-      value = evaluate(expr)
-      puts stringify(value)
+      statements.each do |statement|
+        execute(statement)
+      end
+      # ee
     rescue e : LoxRuntimeError
       Lox.runtime_error(e.token, e.message.to_s)
       nil
     end
+  end
+
+  def execute(stmt : Stmt)
+    stmt.accept(self)
   end
 
   def stringify(value : Object)
@@ -109,4 +127,3 @@ class Interpreter
     value.to_s
   end
 end
-
