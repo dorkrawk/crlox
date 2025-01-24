@@ -1,7 +1,9 @@
 require "./runtime_error"
+require "./environment"
 
 class Interpreter
   # include Expr::Visitor
+  @environment = Environment.new
 
   def visit_literal_expr(expr : Expr::Literal)
     expr.value
@@ -83,6 +85,17 @@ class Interpreter
     nil
   end
 
+  def visit_var_stmt(stmt : Stmt::Var)
+    value = nil
+    value = evaluate(stmt.initializer) if stmt.initializer
+    @environment.define(stmt.name.lexeme, value)
+    nil
+  end
+
+  def visit_variable_expr(expr : Expr::Variable)
+    @environment.get(expr.name)
+  end
+
   def is_truthy?(value)
     return false if value.nil?
     return !!value if value.is_a?(Bool)
@@ -102,11 +115,12 @@ class Interpreter
   end
 
   # do we need this anymore?
-  def evaluate(expr : Expr)
+  def evaluate(expr : Expr | Nil)
+    return nil if expr.nil?
     expr.accept(self)
   end
 
-  def interpret(statements : Array(Stmt))
+  def interpret(statements : Array(Stmt | Nil))
     begin
       statements.each do |statement|
         execute(statement)
@@ -118,7 +132,8 @@ class Interpreter
     end
   end
 
-  def execute(stmt : Stmt)
+  def execute(stmt : Stmt | Nil)
+    return if stmt.nil?
     stmt.accept(self)
   end
 

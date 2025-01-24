@@ -54,4 +54,16 @@ abstract class Expr
       visitor.visit_unary_expr(self)
     end
   end
+
+  class Variable < Expr
+    getter :name
+
+    def initialize(name : Token)
+      @name = name
+    end
+
+    def accept(visitor)
+      visitor.visit_variable_expr(self)
+    end
+  end
 end

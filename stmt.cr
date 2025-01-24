@@ -24,4 +24,18 @@ abstract class Stmt
       visitor.visit_print_stmt(self)
     end
   end
+
+  class Var < Stmt
+    getter :name
+    getter :initializer
+
+    def initialize(name : Token, initializer : Expr | Nil)
+      @name = name
+      @initializer = initializer
+    end
+
+    def accept(visitor)
+      visitor.visit_var_stmt(self)
+    end
+  end
 end

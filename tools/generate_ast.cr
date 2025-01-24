@@ -12,11 +12,13 @@ class GenerateAst
       "Grouping : Expr - expression",
       "Literal  : Bool | Nil | Float64 | String - value",
       "Unary    : Token - operator, Expr - right",
+      "Variable : Token - name",
     ])
 
     define_ast(output_dir, "Stmt", [
       "Expression : Expr - expression",
       "Print      : Expr - expression",
+      "Var        : Token - name, Expr | Nil - initializer",
     ])
   end
 
@@ -40,13 +42,13 @@ class GenerateAst
 
       class #{class_name} < #{base_name}
         #{fields.split(", ").map do |field|
-          "getter :#{field.split(" - ")[1]}"
-        end.join("\n    ")}
+            "getter :#{field.split(" - ")[1]}"
+          end.join("\n    ")}
 
         def initialize(#{fields.split(", ").map { |field| "#{field.split(" - ")[1]} : #{field.split(" - ")[0]}" }.join(", ")})
           #{fields.split(", ").map do |field|
-            "@#{field.split(" - ")[1]} = #{field.split(" - ")[1]}"
-          end.join("\n      ")}
+              "@#{field.split(" - ")[1]} = #{field.split(" - ")[1]}"
+            end.join("\n      ")}
         end
 
         def accept(visitor)

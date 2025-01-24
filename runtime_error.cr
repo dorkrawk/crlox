@@ -1,3 +1,5 @@
+require "./token"
+
 class LoxRuntimeError < Exception
   getter token : Token
   getter message
