@@ -8,6 +8,7 @@ class GenerateAst
     output_dir = args[0]
 
     define_ast(output_dir, "Expr", [
+      "Assign   : Token - name, Expr - value",
       "Binary   : Expr - left, Token - operator, Expr - right",
       "Grouping : Expr - expression",
       "Literal  : Bool | Nil | Float64 | String - value",
@@ -16,6 +17,7 @@ class GenerateAst
     ])
 
     define_ast(output_dir, "Stmt", [
+      "Block      : Array(Stmt | Nil) - statements",
       "Expression : Expr - expression",
       "Print      : Expr - expression",
       "Var        : Token - name, Expr | Nil - initializer",

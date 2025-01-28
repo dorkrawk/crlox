@@ -1,6 +1,20 @@
 abstract class Expr
   abstract def accept(visitor : ExprVisitor)
 
+  class Assign < Expr
+    getter :name
+    getter :value
+
+    def initialize(name : Token, value : Expr)
+      @name = name
+      @value = value
+    end
+
+    def accept(visitor)
+      visitor.visit_assign_expr(self)
+    end
+  end
+
   class Binary < Expr
     getter :left
     getter :operator

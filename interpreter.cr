@@ -2,7 +2,6 @@ require "./runtime_error"
 require "./environment"
 
 class Interpreter
-  # include Expr::Visitor
   @environment = Environment.new
 
   def visit_literal_expr(expr : Expr::Literal)
@@ -76,7 +75,6 @@ class Interpreter
 
   def visit_expression_stmt(stmt : Stmt::Expression)
     evaluate(stmt.expression)
-    nil
   end
 
   def visit_print_stmt(stmt : Stmt::Print)
@@ -85,11 +83,34 @@ class Interpreter
     nil
   end
 
+  def visit_block_stmt(stmt : Stmt::Block)
+    execute_block(stmt.statements, Environment.new(@environment))
+    nil
+  end
+
+  def execute_block(statements : Array(Stmt | Nil), environment : Environment)
+    previous = @environment
+    begin
+      @environment = environment
+      statements.each do |statement|
+        execute(statement)
+      end
+    ensure
+      @environment = previous
+    end
+  end
+
   def visit_var_stmt(stmt : Stmt::Var)
     value = nil
     value = evaluate(stmt.initializer) if stmt.initializer
     @environment.define(stmt.name.lexeme, value)
     nil
+  end
+
+  def visit_assign_expr(expr : Expr::Assign)
+    value = evaluate(expr.value)
+    @environment.assign(expr.name, value)
+    value
   end
 
   def visit_variable_expr(expr : Expr::Variable)
@@ -114,7 +135,6 @@ class Interpreter
     end
   end
 
-  # do we need this anymore?
   def evaluate(expr : Expr | Nil)
     return nil if expr.nil?
     expr.accept(self)
@@ -122,10 +142,11 @@ class Interpreter
 
   def interpret(statements : Array(Stmt | Nil))
     begin
+      last_value = nil
       statements.each do |statement|
-        execute(statement)
+        last_value = execute(statement)
       end
-      # ee
+      last_value
     rescue e : LoxRuntimeError
       Lox.runtime_error(e.token, e.message.to_s)
       nil

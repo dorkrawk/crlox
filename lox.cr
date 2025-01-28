@@ -31,7 +31,8 @@ class Lox
       print "> "
       line = gets
       break if line.nil? || line == "exit"
-      run(line)
+      line_value = run(line)
+      puts line_value if line_value # so that we print the value of the last expression in the repl
       @@had_error = false
     end
   end

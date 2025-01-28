@@ -41,6 +41,7 @@ class Parser
 
   def statement
     return print_statement if match(TokenType::PRINT)
+    return Stmt::Block.new(block) if match(TokenType::LEFT_BRACE)
 
     expression_statement
   end
@@ -50,6 +51,16 @@ class Parser
     consume(TokenType::SEMICOLON, "Expect ';' after value.")
 
     Stmt::Print.new(value)
+  end
+
+  def block
+    statements = [] of Stmt | Nil
+    while !check(TokenType::RIGHT_BRACE) && !is_at_end?
+      statements << declaration
+    end
+    consume(TokenType::RIGHT_BRACE, "Expect '}' after block.")
+    
+    statements
   end
 
   def var_declaration
@@ -70,7 +81,24 @@ class Parser
   end
 
   def expression
-    equality
+    assignment
+  end
+
+  def assignment
+    expr = equality
+
+    if match(TokenType::EQUAL)
+      equals = previous
+      value = assignment
+      if expr.is_a?(Expr::Variable)
+        name = expr.name
+        return Expr::Assign.new(name, value)
+      end
+
+      raise error(equals, "Invalid assignment target.")
+    end
+
+    expr
   end
 
   def equality

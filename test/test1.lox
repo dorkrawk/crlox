@@ -4,3 +4,11 @@ print 2 + 1;
 var x = 42;
 print x;
 print x + 8;
+x = 666;
+print x;
+var y = 0;
+{
+    var y = 4;
+    print x + y;   
+}
+print y;
