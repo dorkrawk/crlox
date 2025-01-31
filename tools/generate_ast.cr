@@ -12,6 +12,7 @@ class GenerateAst
       "Binary   : Expr - left, Token - operator, Expr - right",
       "Grouping : Expr - expression",
       "Literal  : Bool | Nil | Float64 | String - value",
+      "Logical  : Expr - left, Token - operator, Expr - right",
       "Unary    : Token - operator, Expr - right",
       "Variable : Token - name",
     ])
@@ -19,6 +20,7 @@ class GenerateAst
     define_ast(output_dir, "Stmt", [
       "Block      : Array(Stmt | Nil) - statements",
       "Expression : Expr - expression",
+      "If         : Expr - condition, Stmt - then_branch, Stmt | Nil - else_branch",
       "Print      : Expr - expression",
       "Var        : Token - name, Expr | Nil - initializer",
     ])

@@ -98,7 +98,7 @@ class Parser
   end
 
   def assignment
-    expr = equality
+    expr = or
 
     if match(TokenType::EQUAL)
       equals = previous
@@ -109,6 +109,30 @@ class Parser
       end
 
       raise error(equals, "Invalid assignment target.")
+    end
+
+    expr
+  end
+
+  def or
+    expr = and
+
+    while match(TokenType::OR)
+      operator = previous
+      right = and
+      expr = Expr::Logical.new(expr, operator, right)
+    end
+
+    expr
+  end
+
+  def and
+    expr = equality
+
+    while match(TokenType::AND)
+      operator = previous
+      right = equality
+      expr = Expr::Logical.new(expr, operator, right)
     end
 
     expr

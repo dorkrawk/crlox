@@ -25,6 +25,22 @@ abstract class Stmt
     end
   end
 
+  class If < Stmt
+    getter :condition
+    getter :then_branch
+    getter :else_branch
+
+    def initialize(condition : Expr, then_branch : Stmt, else_branch : Stmt | Nil)
+      @condition = condition
+      @then_branch = then_branch
+      @else_branch = else_branch
+    end
+
+    def accept(visitor)
+      visitor.visit_if_stmt(self)
+    end
+  end
+
   class Print < Stmt
     getter :expression
 

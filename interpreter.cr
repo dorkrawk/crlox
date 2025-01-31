@@ -8,6 +8,19 @@ class Interpreter
     expr.value
   end
 
+  def visit_logical_expr(expr : Expr::Logical)
+    left = evaluate(expr.left)
+
+    # handling early returns for OR and AND
+    if expr.operator.type == TokenType::OR
+      return left if is_truthy?(left)
+    else 
+      return left if !is_truthy?(left)
+    end
+
+    return evaluate(expr.right)
+  end
+
   def visit_grouping_expr(expr : Expr::Grouping)
     evaluate(expr.expression)
   end
@@ -75,6 +88,15 @@ class Interpreter
 
   def visit_expression_stmt(stmt : Stmt::Expression)
     evaluate(stmt.expression)
+  end
+
+  def visit_if_stmt(stmt : Stmt::If)
+    if is_truthy?(stmt.condition)
+      execute(stmt.then_branch)
+    elsif !stmt.else_branch.nil?
+      execute(stmt.else_branch)
+    end
+    nil
   end
 
   def visit_print_stmt(stmt : Stmt::Print)

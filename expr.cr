@@ -55,6 +55,22 @@ abstract class Expr
     end
   end
 
+  class Logical < Expr
+    getter :left
+    getter :operator
+    getter :right
+
+    def initialize(left : Expr, operator : Token, right : Expr)
+      @left = left
+      @operator = operator
+      @right = right
+    end
+
+    def accept(visitor)
+      visitor.visit_logical_expr(self)
+    end
+  end
+
   class Unary < Expr
     getter :operator
     getter :right
