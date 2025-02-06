@@ -40,11 +40,75 @@ class Parser
   end
 
   def statement
+    return for_statement if match(TokenType::FOR)
     return if_statement if match(TokenType::IF)
     return print_statement if match(TokenType::PRINT)
+    return while_statement if match(TokenType::WHILE)
     return Stmt::Block.new(block) if match(TokenType::LEFT_BRACE)
 
     expression_statement
+  end
+
+  def for_statement
+    # for (var i = 0; i < 10; i = i + 1)
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'for'.")
+
+    initializer = nil
+    
+    if match(TokenType::SEMICOLON) # omitted initializer
+      initializer = nil
+    elsif match(TokenType::VAR) # iterator declaration
+      initializer = var_declaration
+    else
+      initializer = expression_statement
+    end
+  
+    condition = nil
+
+    if !check(TokenType::SEMICOLON)
+      condition = expression
+    end
+    consume(TokenType::SEMICOLON, "Expect ';' after look condition.")
+
+    increment = nil
+
+    if !check(TokenType::RIGHT_PAREN)
+      increment = expression
+    end
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after for clauses.")
+
+    body = statement
+
+    if !increment.nil?
+      inc_stmt_array : Array(Stmt) = [body, Stmt::Expression.new(increment)].as(Array(Stmt))
+      body_with_increment = Array(Stmt | Nil).new
+      body_with_increment.concat(inc_stmt_array)
+      body = Stmt::Block.new(body_with_increment)
+    end
+    # { body; i = i + 1; }
+
+    condition = Expr::Literal.new(true) if condition.nil?
+
+    body = Stmt::While.new(condition, body)
+    # while(i < 10) {
+    #   body;
+    #   i = i + 1;
+    # }
+    
+    if !initializer.nil?
+      stmt_array : Array(Stmt) = [initializer, body]
+      body_with_initializer = Array(Stmt | Nil).new
+      body_with_initializer.concat(stmt_array)
+
+      body = Stmt::Block.new(body_with_initializer)
+    end
+    # var i = 0;
+    # while(i < 10) {
+    #   body;
+    #   i = i + 1;
+    # }
+
+    return body
   end
 
   def if_statement
@@ -57,6 +121,15 @@ class Parser
     else_branch = statement if match(TokenType::ELSE) # else is bound to the nearest if statement
 
     Stmt::If.new(condition, then_branch, else_branch)
+  end
+
+  def while_statement
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'while.'")
+    condition = expression
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.")
+    body = statement
+
+    Stmt::While.new(condition, body)
   end
 
   def print_statement

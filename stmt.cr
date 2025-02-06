@@ -66,4 +66,18 @@ abstract class Stmt
       visitor.visit_var_stmt(self)
     end
   end
+
+  class While < Stmt
+    getter :condition
+    getter :body
+
+    def initialize(condition : Expr, body : Stmt)
+      @condition = condition
+      @body = body
+    end
+
+    def accept(visitor)
+      visitor.visit_while_stmt(self)
+    end
+  end
 end

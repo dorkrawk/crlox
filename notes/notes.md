@@ -5,4 +5,4 @@
 
 # Current Progress
 
-part way through 8.2.2
+Just implemented `while` but it doesn't seem like I'm re-assessing the conditional after each loop, so it looks like it's stuck in an infintite loop.

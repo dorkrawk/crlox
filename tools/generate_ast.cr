@@ -23,6 +23,7 @@ class GenerateAst
       "If         : Expr - condition, Stmt - then_branch, Stmt | Nil - else_branch",
       "Print      : Expr - expression",
       "Var        : Token - name, Expr | Nil - initializer",
+      "While      : Expr - condition, Stmt - body"
     ])
   end
 

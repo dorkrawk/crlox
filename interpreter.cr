@@ -91,10 +91,17 @@ class Interpreter
   end
 
   def visit_if_stmt(stmt : Stmt::If)
-    if is_truthy?(stmt.condition)
+    if is_truthy?(evaluate(stmt.condition))
       execute(stmt.then_branch)
     elsif !stmt.else_branch.nil?
       execute(stmt.else_branch)
+    end
+    nil
+  end
+
+  def visit_while_stmt(stmt : Stmt::While)
+    while is_truthy?(evaluate(stmt.condition))
+      execute(stmt.body)
     end
     nil
   end
