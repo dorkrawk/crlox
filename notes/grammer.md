@@ -1,12 +1,22 @@
 program     -> declaration* EOF;
-declaration -> varDecl | statement;
+declaration -> funDecl | varDecl | statement;
+funDecl     -> "fun" function;
+function    -> IDENTIFIER "(" parameters? ")" block;
+parameters  -> IDENTIFIER ( "," IDENTIFIER )*;
 varDecl     -> "var" IDENTIFIER ( "=" expression)? ";";
-statement   -> exprStmt | ifStmt | printStmt | whileStmt | block;
+statement   -> exprStmt | 
+                ifStmt | 
+                forStmt |
+                printStmt |
+                returnStmt |
+                whileStmt | 
+                block;
 exprStmt    -> expression ";";
 ifStmt      -> "if" "(" expression ")" statement ( "else" statement )?;
 whileStmt   -> "while" "(" expression ")" statement;
 forStmt     -> "for" "(" ( varDecl | exprStmt | ; ) expression? ";" expression? ")" statement;
 printStmt   -> "print" expression ";";
+returnStmt  -> "return" expression? ";";
 block       -> "{" declaration "}";
 expression  -> assignment;
 assignment  -> IDENTIFIER "=" assignment | logic_or; 
@@ -16,5 +26,7 @@ equality    -> comparison ( ( "!=" | "==" ) comparison )*;
 comparison  -> term ( ( ">" | ">=" | "<" | "<=" ) term )*;
 term        -> factor ( ( "-" | "+" ) factor )*;
 factor      -> unary ( ( "/" | "*" ) unary )*;
-unary       -> ( "!" | "-" ) unary | primary;
+unary       -> ( "!" | "-" ) unary | call;
+call        -> primary ( "(" arguements? ")" )*;
+arguements  -> expression ( "," expression )*;
 primary     -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER;

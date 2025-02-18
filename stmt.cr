@@ -25,6 +25,22 @@ abstract class Stmt
     end
   end
 
+  class Function < Stmt
+    getter :name
+    getter :params
+    getter :body
+
+    def initialize(name : Token, params : Array(Token), body : Array(Stmt | Nil))
+      @name = name
+      @params = params
+      @body = body
+    end
+
+    def accept(visitor)
+      visitor.visit_function_stmt(self)
+    end
+  end
+
   class If < Stmt
     getter :condition
     getter :then_branch
@@ -50,6 +66,20 @@ abstract class Stmt
 
     def accept(visitor)
       visitor.visit_print_stmt(self)
+    end
+  end
+
+  class Return < Stmt
+    getter :keyword
+    getter :value
+
+    def initialize(keyword : Token, value : Expr | Nil)
+      @keyword = keyword
+      @value = value
+    end
+
+    def accept(visitor)
+      visitor.visit_return_stmt(self)
     end
   end
 

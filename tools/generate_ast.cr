@@ -14,14 +14,17 @@ class GenerateAst
       "Literal  : Bool | Nil | Float64 | String - value",
       "Logical  : Expr - left, Token - operator, Expr - right",
       "Unary    : Token - operator, Expr - right",
+      "Call     : Expr - callee, Token - paren, Array(Expr) - arguments",
       "Variable : Token - name",
     ])
 
     define_ast(output_dir, "Stmt", [
       "Block      : Array(Stmt | Nil) - statements",
       "Expression : Expr - expression",
+      "Function   : Token - name, Array(Token) - params, Array(Stmt | Nil) - body",
       "If         : Expr - condition, Stmt - then_branch, Stmt | Nil - else_branch",
       "Print      : Expr - expression",
+      "Return     : Token - keyword, Expr | Nil - value",
       "Var        : Token - name, Expr | Nil - initializer",
       "While      : Expr - condition, Stmt - body"
     ])

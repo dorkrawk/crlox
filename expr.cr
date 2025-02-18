@@ -85,6 +85,22 @@ abstract class Expr
     end
   end
 
+  class Call < Expr
+    getter :callee
+    getter :paren
+    getter :arguments
+
+    def initialize(callee : Expr, paren : Token, arguments : Array(Expr))
+      @callee = callee
+      @paren = paren
+      @arguments = arguments
+    end
+
+    def accept(visitor)
+      visitor.visit_call_expr(self)
+    end
+  end
+
   class Variable < Expr
     getter :name
 

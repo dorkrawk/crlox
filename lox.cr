@@ -48,6 +48,10 @@ class Lox
     parser = Parser.new(tokens)
     statements = parser.parse
 
+    #statements.each do |statement|
+    #  puts statement
+    #end
+
     return if @@had_error
 
     @@interpreter.interpret(statements)

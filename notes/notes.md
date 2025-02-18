@@ -5,4 +5,6 @@
 
 # Current Progress
 
-Just implemented `while` but it doesn't seem like I'm re-assessing the conditional after each loop, so it looks like it's stuck in an infintite loop.
+I'm able to define a function, but it's not being called.
+
+It looks like it could be a parser error. I don't seem to be entering the "call" method in the parser for the function call.  It seems to just be registering as an expression.

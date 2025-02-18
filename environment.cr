@@ -1,16 +1,16 @@
 class Environment
-  @values = Hash(String, Bool | Nil | Float64 | String).new
+  @values = Hash(String, Bool | Nil | Float64 | String | LoxCallable).new
   @enclosing : Environment?
 
   def initialize(enclosing : Environment? = nil)
     @enclosing = enclosing
   end
 
-  def define(name : String, value : Bool | Nil | Float64 | String)
+  def define(name : String, value : Bool | Nil | Float64 | String | LoxCallable)
     @values[name] = value
   end
 
-  def get(name : Token) : Bool | Nil | Float64 | String
+  def get(name : Token) : Bool | Nil | Float64 | String | LoxCallable
     if @values.has_key?(name.lexeme)
       return @values[name.lexeme]
     end
@@ -22,7 +22,7 @@ class Environment
     raise LoxRuntimeError.new(name, "Undefined variable '#{name.lexeme}'.")
   end
 
-  def assign(name : Token, value : Bool | Nil | Float64 | String)
+  def assign(name : Token, value : Bool | Nil | Float64 | String | LoxCallable)
     if @values.has_key?(name.lexeme)
       @values[name.lexeme] = value
       return

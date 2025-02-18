@@ -1,8 +1,31 @@
 require "./runtime_error"
+require "./return"
 require "./environment"
+require "./lox_callable"
+require "./lox_function"
 
 class Interpreter
-  @environment = Environment.new
+  GLOBALS = Environment.new
+  @environment = GLOBALS
+
+
+  CLOCK_NATIVE_FN = Class.new(LoxCallable) do
+      def arity
+        0
+      end
+
+      def call(interpreter, arguements)
+        Time.utc.to_unix
+      end
+
+      def to_s
+        "<native fn>"
+      end
+    end
+
+  def initializer
+    GLOBALS.define("clock", CLOCK_NATIVE_FN)
+  end
 
   def visit_literal_expr(expr : Expr::Literal)
     expr.value
@@ -86,8 +109,35 @@ class Interpreter
     end
   end
 
+  def visit_call_expr(expr : Expr::Call)
+    callee = evaluate(expr.callee)
+
+    arguments = [] of (String | Bool | Nil | Float64 | String | LoxCallable)
+    expr.arguments.each do |argument|
+      arguments << evaluate(argument)
+    end
+
+    if !callee.is_a?(LoxCallable)
+      raise LoxRuntimeError.new(expr.paren, "Can only call functions and classes.")
+    end
+
+    function = callee # need to cast this as a LoxCallable type?
+
+    if arguments.size != function.arity
+      raise LoxRuntimeError.new(expr.paren, "Expected #{function.arity} arguments but got #{arguments.size}.")
+    end
+
+    function.call(self, arguments)
+  end
+
   def visit_expression_stmt(stmt : Stmt::Expression)
     evaluate(stmt.expression)
+  end
+
+  def visit_function_stmt(stmt : Stmt::Function)
+    function = LoxFunction.new(stmt, @environment)
+    @environment.define(stmt.name.lexeme, function)
+    nil
   end
 
   def visit_if_stmt(stmt : Stmt::If)
@@ -110,6 +160,15 @@ class Interpreter
     value = evaluate(stmt.expression)
     puts value
     nil
+  end
+
+  def visit_return_stmt(stmt : Stmt::Return)
+    value = nil
+    value = evaluate(stmt.value) if !stmt.value.nil?
+
+    # using an exception to unwind the interpreter back to the code that
+    #   began executing the body.
+    raise Return.new(value) # still need to implement Return
   end
 
   def visit_block_stmt(stmt : Stmt::Block)

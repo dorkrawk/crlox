@@ -9,7 +9,7 @@ print x;
 var y = 0;
 {
     var y = 4;
-    print x + y;   
+    print x + y;
 }
 print y;
 if (y < 10) {
@@ -27,4 +27,11 @@ while (i < 10) {
 }
 for(var j = 30; j < 40; j = j + 1) {
     print j;
-  }
+}
+
+fun say_hi(name) {
+    print "hi " + name + "!";
+}
+
+say_hi("Dave");
+
