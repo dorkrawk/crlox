@@ -2,6 +2,7 @@ require "./scanner"
 require "./parser"
 require "./ast_printer"
 require "./interpreter"
+require "./resolver"
 
 class Lox
   @@interpreter = Interpreter.new
@@ -49,9 +50,15 @@ class Lox
     statements = parser.parse
 
     #statements.each do |statement|
-    #  puts statement
+    #  pp statement
     #end
 
+    return if @@had_error
+
+    resolver = Resolver.new(@@interpreter)
+    resolver.resolve(statements)
+
+    # stop if there was a resolution error
     return if @@had_error
 
     @@interpreter.interpret(statements)

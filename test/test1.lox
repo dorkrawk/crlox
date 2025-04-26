@@ -25,7 +25,20 @@ while (i < 10) {
   print i;
   i = i + 1;
 }
+
+print "as a while loop";
+
+var k = 30;
+while(k < 40) {
+  print "hi";
+  print k;
+  k = k + 1;
+}
+
+print "as for loop";
+
 for(var j = 30; j < 40; j = j + 1) {
+    print "hi";
     print j;
 }
 

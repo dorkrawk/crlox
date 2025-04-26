@@ -7,6 +7,7 @@ require "./lox_function"
 class Interpreter
   GLOBALS = Environment.new
   @environment = GLOBALS
+  @locals = Hash(Expr, Int32).new
 
 
   CLOCK_NATIVE_FN = Class.new(LoxCallable) do
@@ -197,12 +198,28 @@ class Interpreter
 
   def visit_assign_expr(expr : Expr::Assign)
     value = evaluate(expr.value)
-    @environment.assign(expr.name, value)
+    
+    distance = @locals.has_key?(expr) ? @locals[expr] : nil
+    if !distance.nil?
+      @environment.assign_at(distance, expr.name, value)
+    else
+      GLOBALS.assign(expr.name, value)
+    end
+
     value
   end
 
   def visit_variable_expr(expr : Expr::Variable)
-    @environment.get(expr.name)
+    look_up_variable(expr.name, expr)
+  end
+
+  def look_up_variable(name : Token, expr : Expr)
+    distance = @locals.has_key?(expr) ? @locals[expr] : nil
+    if !distance.nil?
+      @environment.get_at(distance, name.lexeme)
+    else
+      GLOBALS.get(name)
+    end
   end
 
   def is_truthy?(value)
@@ -244,6 +261,10 @@ class Interpreter
   def execute(stmt : Stmt | Nil)
     return if stmt.nil?
     stmt.accept(self)
+  end
+
+  def resolve(expr : Expr, depth : Int32)
+    @locals[expr] = depth
   end
 
   def stringify(value : Object)
