@@ -13,13 +13,18 @@ class GenerateAst
       "Grouping : Expr - expression",
       "Literal  : Bool | Nil | Float64 | String - value",
       "Logical  : Expr - left, Token - operator, Expr - right",
+      "Set      : Expr - object, Token - name, Expr - value",
+      "Super    : Token - keyword, Token - method",
+      "This     : Token - keyword",
       "Unary    : Token - operator, Expr - right",
       "Call     : Expr - callee, Token - paren, Array(Expr) - arguments",
+      "Get      : Expr - object, Token - name",
       "Variable : Token - name",
     ])
 
     define_ast(output_dir, "Stmt", [
       "Block      : Array(Stmt | Nil) - statements",
+      "Class      : Token - name, Expr::Variable | Nil - superclass, Array(Function) - methods",
       "Expression : Expr - expression",
       "Function   : Token - name, Array(Token) - params, Array(Stmt | Nil) - body",
       "If         : Expr - condition, Stmt - then_branch, Stmt | Nil - else_branch",
@@ -37,8 +42,8 @@ class GenerateAst
         abstract def accept(visitor : #{base_name}Visitor)
       EOF
       types.each do |type|
-        class_name = type.split(":")[0].strip
-        fields = type.split(":")[1].strip
+        class_name = type.split(":", 2)[0].strip
+        fields = type.split(":", 2)[1].strip
         file.puts define_type(file, base_name, class_name, fields)
       end
       file.puts "end" # closes abstract class

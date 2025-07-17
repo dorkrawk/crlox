@@ -1,12 +1,12 @@
 class Environment
-  getter values = Hash(String, Bool | Nil | Float64 | String | LoxCallable).new
+  getter values = Hash(String, Bool | Nil | Float64 | String | LoxCallable | LoxClass | LoxInstance).new
   getter enclosing : Environment?
 
   def initialize(enclosing : Environment? = nil)
     @enclosing = enclosing
   end
 
-  def define(name : String, value : Bool | Nil | Float64 | String | LoxCallable)
+  def define(name : String, value : Bool | Nil | Float64 | String | LoxCallable | LoxClass | LoxInstance)
     @values[name] = value
   end
 
@@ -23,11 +23,11 @@ class Environment
     ancestor(distance).try &.values[name]
   end
 
-  def assign_at(distance : Int32, name : Token, value : Bool | Nil | Float64 | String | LoxCallable)
+  def assign_at(distance : Int32, name : Token, value : Bool | Nil | Float64 | String | LoxCallable | LoxClass | LoxInstance)
     ancestor(distance).try &.values[name.lexeme] = value
   end
 
-  def get(name : Token) : Bool | Nil | Float64 | String | LoxCallable
+  def get(name : Token) : Bool | Nil | Float64 | String | LoxCallable | LoxClass | LoxInstance
     if @values.has_key?(name.lexeme)
       return @values[name.lexeme]
     end
@@ -35,14 +35,11 @@ class Environment
     if @enclosing
       return @enclosing.try &.get(name)
     end
-
-    pp "values: #{@values}"
-    pp "enclosing: #{@enclosing}"
     
     raise LoxRuntimeError.new(name, "Undefined variable '#{name.lexeme}'.")
   end
 
-  def assign(name : Token, value : Bool | Nil | Float64 | String | LoxCallable)
+  def assign(name : Token, value : Bool | Nil | Float64 | String | LoxCallable | LoxClass | LoxInstance)
     if @values.has_key?(name.lexeme)
       @values[name.lexeme] = value
       return

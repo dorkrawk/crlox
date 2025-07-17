@@ -8,3 +8,7 @@
 I'm able to define a function, but it's not being called.
 
 It looks like it could be a parser error. I don't seem to be entering the "call" method in the parser for the function call.  It seems to just be registering as an expression.
+
+# Language Ideas
+
+- initializers are kind of weird methods, they require overriding behavior like return values. Maybe code to be run on initialization shouldn't be in a method?

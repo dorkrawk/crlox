@@ -71,6 +71,48 @@ abstract class Expr
     end
   end
 
+  class Set < Expr
+    getter :object
+    getter :name
+    getter :value
+
+    def initialize(object : Expr, name : Token, value : Expr)
+      @object = object
+      @name = name
+      @value = value
+    end
+
+    def accept(visitor)
+      visitor.visit_set_expr(self)
+    end
+  end
+
+  class Super < Expr
+    getter :keyword
+    getter :method
+
+    def initialize(keyword : Token, method : Token)
+      @keyword = keyword
+      @method = method
+    end
+
+    def accept(visitor)
+      visitor.visit_super_expr(self)
+    end
+  end
+
+  class This < Expr
+    getter :keyword
+
+    def initialize(keyword : Token)
+      @keyword = keyword
+    end
+
+    def accept(visitor)
+      visitor.visit_this_expr(self)
+    end
+  end
+
   class Unary < Expr
     getter :operator
     getter :right
@@ -98,6 +140,20 @@ abstract class Expr
 
     def accept(visitor)
       visitor.visit_call_expr(self)
+    end
+  end
+
+  class Get < Expr
+    getter :object
+    getter :name
+
+    def initialize(object : Expr, name : Token)
+      @object = object
+      @name = name
+    end
+
+    def accept(visitor)
+      visitor.visit_get_expr(self)
     end
   end
 

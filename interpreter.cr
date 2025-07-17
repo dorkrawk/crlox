@@ -3,6 +3,7 @@ require "./return"
 require "./environment"
 require "./lox_callable"
 require "./lox_function"
+require "./lox_class.cr"
 
 class Interpreter
   GLOBALS = Environment.new
@@ -43,6 +44,39 @@ class Interpreter
     end
 
     return evaluate(expr.right)
+  end
+
+  def visit_set_expr(expr : Expr::Set)
+    object = evaluate(expr.object)
+
+    if !object.is_a? LoxInstance
+      raise LoxRuntimeError.new(expr.name, "Only instances can have fields.")
+    end
+
+    value = evaluate(expr.value)
+
+    object.set(expr.name, value)
+
+    value
+  end
+
+  def visit_super_expr(expr : Expr::Super)
+    distance = @locals[expr]
+    superclass = @environment.try &.get_at(distance, "super")
+
+    object = @environment.try &.get_at(distance - 1, "this")
+
+    method = superclass.as(LoxClass).find_method(expr.method.lexeme)
+
+    if method.nil?
+      raise LoxRuntimeError.new(expr.method, "Undefined property #{expr.method.lexeme}.")
+    end
+
+    method.bind(object.as(LoxInstance))
+  end
+
+  def visit_this_expr(expr : Expr::This)
+    look_up_variable(expr.keyword, expr)
   end
 
   def visit_grouping_expr(expr : Expr::Grouping)
@@ -113,7 +147,7 @@ class Interpreter
   def visit_call_expr(expr : Expr::Call)
     callee = evaluate(expr.callee)
 
-    arguments = [] of (String | Bool | Nil | Float64 | String | LoxCallable)
+    arguments = [] of (String | Bool | Nil | Float64 | String | LoxCallable | LoxClass | LoxInstance)
     expr.arguments.each do |argument|
       arguments << evaluate(argument)
     end
@@ -131,13 +165,22 @@ class Interpreter
     function.call(self, arguments)
   end
 
+  def visit_get_expr(expr : Expr::Get)
+    object = evaluate(expr.object)
+    if object.is_a? LoxInstance
+      return object.try &.get(expr.name)
+    end
+
+    raise LoxRuntimeError.new(expr.name, "Only instances have properties.")
+  end
+
   def visit_expression_stmt(stmt : Stmt::Expression)
     evaluate(stmt.expression)
   end
 
   def visit_function_stmt(stmt : Stmt::Function)
-    function = LoxFunction.new(stmt, @environment)
-    @environment.define(stmt.name.lexeme, function)
+    function = LoxFunction.new(stmt, @environment.as(Environment), false)
+    @environment.try &.define(stmt.name.lexeme, function)
     nil
   end
 
@@ -177,6 +220,43 @@ class Interpreter
     nil
   end
 
+  def visit_class_stmt(stmt : Stmt::Class)
+    superclass = nil
+    if !stmt.superclass.nil?
+      superclass = evaluate(stmt.superclass)
+      if !superclass.is_a?(LoxClass)
+        # this isn't great... figure out better nil handling
+        superclass_name = stmt.superclass.try &.name || Token.new(TokenType::CLASS,"","", 0)
+        raise LoxRuntimeError.new(superclass_name, "Superclass must be a class.")
+      end
+    end
+
+    @environment.try &.define(stmt.name.lexeme, nil)
+
+    if !stmt.superclass.nil?
+      @environment = Environment.new(@environment)
+      @environment.try &.define("super", superclass.as(LoxClass))
+    end
+
+    methods = {} of String => LoxFunction
+    stmt.methods.each do |method|
+      is_initializer = method.name.lexeme == "init"
+      function = LoxFunction.new(method, @environment.as(Environment), is_initializer)
+      methods[method.name.lexeme] = function
+    end
+
+    klass = LoxClass.new(stmt.name.lexeme, superclass, methods)
+
+    if !superclass.nil?
+      # ewwww this is aweful
+      @environment = @environment.try &.enclosing.as(Environment)
+    end
+
+    @environment.try &.assign(stmt.name, klass)
+
+    nil
+  end
+
   def execute_block(statements : Array(Stmt | Nil), environment : Environment)
     previous = @environment
     begin
@@ -192,7 +272,7 @@ class Interpreter
   def visit_var_stmt(stmt : Stmt::Var)
     value = nil
     value = evaluate(stmt.initializer) if stmt.initializer
-    @environment.define(stmt.name.lexeme, value)
+    @environment.try &.define(stmt.name.lexeme, value)
     nil
   end
 
@@ -201,7 +281,7 @@ class Interpreter
     
     distance = @locals.has_key?(expr) ? @locals[expr] : nil
     if !distance.nil?
-      @environment.assign_at(distance, expr.name, value)
+      @environment.try &.assign_at(distance, expr.name, value)
     else
       GLOBALS.assign(expr.name, value)
     end
@@ -216,7 +296,7 @@ class Interpreter
   def look_up_variable(name : Token, expr : Expr)
     distance = @locals.has_key?(expr) ? @locals[expr] : nil
     if !distance.nil?
-      @environment.get_at(distance, name.lexeme)
+      @environment.try &.get_at(distance, name.lexeme)
     else
       GLOBALS.get(name)
     end

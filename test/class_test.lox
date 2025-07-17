@@ -1,0 +1,53 @@
+class Cat {
+  init(name) {
+    this.name = name;
+  }
+
+  say_meow() {
+    return "meow";
+  }
+}
+
+var kitten = Cat("Mochi");
+
+print kitten;
+print kitten.name;
+
+print kitten.say_meow();
+
+class Cake {
+  taste() {
+    var adjective = "delicious";
+    print "The " + this.flavor + " cake is " + adjective + "!";
+  }
+}
+
+var cake = Cake();
+cake.flavor = "German chocolate";
+cake.taste();
+
+class Vehicle {
+  move() {
+    print "go!";
+  }
+}
+
+class Car < Vehicle {}
+
+var car = Car();
+car.move();
+
+class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
+  }
+}
+
+class BostonCream < Doughnut {
+  cool() {
+    super.cook();
+    print "Pipe full of custard.";
+  }
+}
+
+BostonCream().cook();

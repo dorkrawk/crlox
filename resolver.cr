@@ -7,23 +7,73 @@ class Resolver
   enum FunctionType
     NONE
     FUNCTION
+    INITIALIZER
+    METHOD
+  end
+
+  enum ClassType
+    NONE
+    CLASS
+    SUBCLASS
   end
 
   @interpreter : Interpreter
   @scopes : Array(Hash(String, Bool)) = [] of Hash(String, Bool) 
   @current_function = FunctionType::NONE
+  @current_class = ClassType::NONE
 
   def initialize(interpreter)
     @interpreter = interpreter
   end
 
-  def visit_block_stmt(stmt  : Stmt::Block)
+  def visit_block_stmt(stmt : Stmt::Block)
     begin_scope
     #stmt.statements.each do |statement|
     #  resolve(statement)
     #end
     resolve(stmt.statements)
     end_scope
+
+    nil
+  end
+
+  def visit_class_stmt(stmt : Stmt::Class)
+    enclosing_class = @current_class
+    @current_class = ClassType::CLASS
+
+    declare(stmt.name)
+    define(stmt.name)
+
+    if !stmt.superclass.nil?
+      if stmt.name.lexeme == stmt.superclass.try &.name.try &.lexeme
+        Lox.error(stmt.superclass.try &.name, "A class can't inherit from itself.")
+      end
+      @current_class = ClassType::SUPERCLASS
+      resolve(stmt.superclass)
+    end
+
+    # should I just combine this with the previous conditional?
+    if !stmt.superclass.nil?
+      begin_scope
+      @scopes.last["super"] = true
+    end
+
+    begin_scope
+    @scopes.last["this"] = true 
+
+    stmt.methods.each do |method|
+      declaration = FunctionType::METHOD
+      if method.name.lexeme == "init"
+        declaration = FunctionType::INITIALIZER
+      end
+      resolve_function(method, declaration)
+    end
+
+    end_scope
+
+    end_scope if !stmt.superclass.nil?
+
+    @current_class = enclosing_class
 
     nil
   end
@@ -62,8 +112,13 @@ class Resolver
       Lox.error(stmt.keyword, "Can't return from top-level code.")
     end
 
-    resolve(stmt.value) if !stmt.value.nil?
+    if !stmt.value.nil?
+      if @current_function == FunctionType::INITIALIZER
+        Lox.error(stmt.keyword, "Can't return a value from an initializer.")
+      end
 
+      resolve(stmt.value) 
+    end
     nil
   end
 
@@ -121,6 +176,12 @@ class Resolver
     nil
   end
 
+  def visit_get_expr(expr : Expr::Get)
+    resolve(expr.object)
+
+    nil
+  end
+
   def visit_grouping_expr(expr : Expr::Grouping)
     resolve(expr.expression)
 
@@ -135,6 +196,36 @@ class Resolver
     resolve(expr.left)
     resolve(expr.right)
 
+    nil
+  end
+
+  def visit_set_expr(expr : Expr::Set)
+    resolve(expr.value)
+    resolve(expr.object)
+
+    nil
+  end
+
+  def visit_super_expr(expr : Expr::Super)
+    if @current_class == ClassType::NONE
+      Lox.error(expr.keyword, "Can't use 'super' ouside of a class.")
+    elsif @current_class != ClassType::SUBCLASS
+      Lox.error(expr.keyword, "Can't use 'super' in a class with no superclass.")
+    end
+
+    resolve_local(expr, expr.keyword)
+
+    nil
+  end
+
+  def visit_this_expr(expr : Expr::This)
+    if @current_class == ClassType::NONE
+      Lox.error(expr.keyword, "Can't use 'this' outside of a class.")
+      return nil
+    end
+
+    resolve_local(expr, expr.keyword)
+    
     nil
   end
 

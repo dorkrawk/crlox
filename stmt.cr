@@ -13,6 +13,22 @@ abstract class Stmt
     end
   end
 
+  class Class < Stmt
+    getter :name
+    getter :superclass
+    getter :methods
+
+    def initialize(name : Token, superclass : Expr::Variable | Nil, methods : Array(Function))
+      @name = name
+      @superclass = superclass
+      @methods = methods
+    end
+
+    def accept(visitor)
+      visitor.visit_class_stmt(self)
+    end
+  end
+
   class Expression < Stmt
     getter :expression
 

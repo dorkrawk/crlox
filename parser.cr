@@ -32,12 +32,34 @@ class Parser
   end
 
   def declaration
+    return class_declaration if match(TokenType::CLASS)
     return function("function") if match(TokenType::FUN)
     return var_declaration if match(TokenType::VAR)
     return statement
   rescue e : ParseError
     synchronize
     return nil
+  end
+
+  def class_declaration
+    name = consume(TokenType::IDENTIFIER, "Expect class name.")
+
+    superclass = nil
+    if match(TokenType::LESS)
+      consume(TokenType::IDENTIFIER, "Expect superclass name.")
+      superclass = Expr::Variable.new(previous)
+    end
+    consume(TokenType::LEFT_BRACE, "Expect '{' before class body.")
+
+    methods = [] of Stmt::Function
+
+    while !check(TokenType::RIGHT_BRACE) && !is_at_end?
+      methods << function("method")
+    end
+
+    consume(TokenType::RIGHT_BRACE, "Expect '}' after class body.")
+
+    return Stmt::Class.new(name, superclass, methods)
   end
 
   def statement
@@ -218,6 +240,9 @@ class Parser
       if expr.is_a?(Expr::Variable)
         name = expr.name
         return Expr::Assign.new(name, value)
+      elsif expr.is_a? Expr::Get
+        get = expr
+        return Expr::Set.new(get.object, get.name, value)
       end
 
       raise error(equals, "Invalid assignment target.")
@@ -310,6 +335,9 @@ class Parser
     while true   # there's a reason for doing this "while true" style...
       if match(TokenType::LEFT_PAREN)
         expr = finish_call(expr)
+      elsif match(TokenType::DOT)
+        name = consume(TokenType::IDENTIFIER, "Expect property name after '.'.")
+        expr = Expr::Get.new(expr, name)
       else 
         break
       end
@@ -344,6 +372,15 @@ class Parser
     if match(TokenType::NUMBER, TokenType::STRING)
       return Expr::Literal.new(previous.literal)
     end
+
+    if match(TokenType::SUPER)
+      keyword = previous
+      consume(TokenType::DOT, "Expect ',' after 'super'.")
+      method = consume(TokenType::IDENTIFIER, "Expect superclass method name.")
+      return Expr::Super.new(keyword, method)
+    end
+
+    return Expr::This.new(previous) if match(TokenType::THIS)
 
     return Expr::Variable.new(previous) if match(TokenType::IDENTIFIER)
 

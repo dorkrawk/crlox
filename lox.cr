@@ -4,6 +4,8 @@ require "./ast_printer"
 require "./interpreter"
 require "./resolver"
 
+alias LoxObject = Bool | Nil | Float64 | String | LoxCallable | LoxClass | LoxInstance
+
 class Lox
   @@interpreter = Interpreter.new
   @@had_error = false
