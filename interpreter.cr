@@ -11,22 +11,9 @@ class Interpreter
   @locals = Hash(Expr, Int32).new
 
 
-  CLOCK_NATIVE_FN = Class.new(LoxCallable) do
-      def arity
-        0
-      end
-
-      def call(interpreter, arguements)
-        Time.utc.to_unix
-      end
-
-      def to_s
-        "<native fn>"
-      end
-    end
-
-  def initializer
-    GLOBALS.define("clock", CLOCK_NATIVE_FN)
+  def initialize  
+    #GLOBALS.define("clock",ClockFn)
+    #puts GLOBALS
   end
 
   def visit_literal_expr(expr : Expr::Literal)

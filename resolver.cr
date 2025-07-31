@@ -48,7 +48,7 @@ class Resolver
       if stmt.name.lexeme == stmt.superclass.try &.name.try &.lexeme
         Lox.error(stmt.superclass.try &.name, "A class can't inherit from itself.")
       end
-      @current_class = ClassType::SUPERCLASS
+      @current_class = ClassType::SUBCLASS
       resolve(stmt.superclass)
     end
 
